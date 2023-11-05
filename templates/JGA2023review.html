@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>送给敦老师！</title>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <script src="https://webapi.amap.com/maps?v=2.0&key=0b2672541f2ed600930ea227abea90fc"></script>
+    <script type="text/javascript" src="https://cache.amap.com/lbs/static/addToolbar.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #DCC474, #F6F0BB);
+        }
+
+        #startButton {
+            border-radius: 16px;
+            font-size: 20px;
+            margin-top: 120%;
+            width: 40%;
+            padding: 24px;
+            background: linear-gradient(to right, #FFC6CA, #FFF3F4);
+        }
+
+        .photo-gallery {
+            position: relative;
+        }
+
+        #photo {
+            margin: 4px;
+            margin-top: 80px;
+            width: 96%;
+            border-radius: 12px;
+        }
+
+        #play-button {
+            position: absolute;
+            font-size: 20px;
+            top: 16px;
+            right: 16px;
+            background: #FFF5FF;
+            padding: 10px;
+            border: transparent;
+            border-radius: 18px;
+            box-shadow: 2px 2px 5px #888888;
+        }
+
+        #page-button {
+            position: absolute;
+            font-size: 24px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            padding-left: 30px;
+            padding-right: 30px;
+            color: #5F5F5F;
+            background: #FFF5FF;
+            border-radius: 18px;
+            border: transparent;
+            margin: 4px;
+            box-shadow: 2px 2px 5px #888888;
+        }
+
+        #map {
+            width: 74%;
+            height: 300px;
+            position: absolute;
+            right: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .loading-progress {
+            width: 0;
+            height: 20px;
+            background-color: #3498db;
+            transition: width 0.5s;
+        }
+
+        #word {
+          display: absolute;
+          left: 26px;
+          font-family: Arial, sans-serif;
+          font-size: 26px;
+          color: #837382;
+          padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="checkPage">
+        建议使用浏览器打开。如果页面未正常显示，可以尝试点击右上角 “...” 选择在浏览器中打开
+    </div>
+    <div id="startPage" style="display:none">
+        <button id="startButton" style="display:none; margin-left: auto; margin-right: auto; width">打开</button>
+        <p id="loading-text">Loading...<br>
+            建议使用浏览器打开。如果页面未正常显示，可以尝试点击右上角 “...” 选择在浏览器中打开</p>
+        <progress id="loading-progress" value="0" max="100"></progress>
+    </div>
+    <div style="display:none" class="photo-gallery" id="afterOpen">
+        <img id="photo" src="" alt="Travel Photo">
+        <button id="play-button">🔊</button>
+        <p id="word"></p>
+        <div id="map"></div>
+        <div>
+            <button id="page-button" onclick="prevPhoto()" style="top: 10px; left: 20px"><</button>
+            <button id="page-button" onclick="nextPhoto()" style="top: 10px; right: 160px">></button>
+        </div>
+    </div>
+    <audio id="audio" preload="auto" loop>
+        <source src="/archive/JGA2023/files/music" type="audio/mpeg">
+    </audio>
+
+    <script type="text/javascript" >
+        var map = new AMap.Map('map', {
+            zoom: 13
+        });
+
+        const addedPosition = [];
+
+        function addMarker(lat, lon) {
+            if (!addedPosition.includes([lat, lon])){
+                marker = new AMap.Marker({
+                position: [lat, lon],
+                offset: new AMap.Pixel(-13, -30)
+                });
+                marker.setMap(map);
+                addedPosition.push([lat, lon])
+            }
+        }
+    </script>
+    <script>
+        // Add a marker function
+
+
+        const photos =
+        [
+            {% for img in imgs %}
+            { src: '{{img.src}}', lat: {{img.lat}} , lon: {{img.lon}}, bg: '#{{img.bg}}', word: '{{img.word}}'},
+            {% endfor %}
+            // Add more photos here
+        ]; // Add your photo URLs here
+
+        let currentIndex = 0;
+        const photoElement = document.getElementById("photo");
+        const playButton = document.getElementById("play-button");
+        const audio = document.getElementById("audio");
+        const mapElement = document.getElementById("map");
+        const photoWord = document.getElementById("word");
+        const loadingText = document.getElementById("loading-text");
+        const progressBar = document.getElementById("loading-progress");
+        const startButton = document.getElementById("startButton");
+        const mainContent = document.getElementById("afterOpen");
+        const loadingScreen = document.getElementById("startPage");
+        const checkScreen = document.getElementById("checkPage");
+
+        function simulateLoading() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+
+        audio.addEventListener("loadedmetadata", function () {
+            // console.log("音乐加载完成");
+
+            startButton.style.display = 'block';
+            progressBar.style.display = 'none';
+            loadingText.style.display = 'none';
+
+            var img = new Image();
+            img.src = photos[0].src;
+            img.onload = function() {
+              // 图片加载完成后的操作
+              console.log("Image loaded: " + this.src);
+            }
+            var img = new Image();
+            img.src = photos[1].src;
+            img.onload = function() {
+              // 图片加载完成后的操作
+              console.log("Image loaded: " + this.src);
+            }
+            /*
+            for (var i = 0; i < photos.length; i++) {
+              var img = new Image();
+              img.src = photos[i].src;
+              img.onload = function() {
+                // 图片加载完成后的操作
+                console.log("Image loaded: " + this.src);
+              }
+            }
+            */
+        });
+
+        startButton.addEventListener("click", function() {
+            // 在这里添加新内容的显示逻辑
+            // 你可以使用JavaScript来操作DOM，以显示新内容
+            loadingScreen.style.display="none";
+            mainContent.style.display="contents";
+
+            playOrPause();
+            setInterval(nextPhoto, 5500); // Change photo every 5 seconds
+            displayPhoto(currentIndex); // Initial display
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            checkScreen.style.display = 'none';
+            loadingScreen.style.display = 'block';
+            simulateLoading();
+        });
+
+        function displayPhoto(index) {
+            console.log(index);
+            var photo = photos[index];
+            console.log((index-1+photos.length)%photos.length, index)
+            changeBGColor(photos[(index-1+photos.length)%photos.length].bg, photo.bg);
+            photoWord.innerHTML = photo.word;
+            photoElement.src = photo.src;
+            map.panTo([photo.lat, photo.lon]); // Center map at the photo's location
+            addMarker(photo.lat, photo.lon);
+        }
+
+        function playOrPause() {
+            if (audio.paused) {
+                audio.play();
+                playButton.innerText = "🔊";
+            } else {
+                audio.pause();
+                playButton.innerText = "🔈";
+            }
+        }
+
+        playButton.addEventListener("click", playOrPause);
+
+        function nextPhoto() {
+            currentIndex = (currentIndex + 1) % photos.length;
+            displayPhoto(currentIndex);
+            var img = new Image();
+            img.src = photos[(currentIndex + 1) % photos.length].src;
+            img.onload = function() {
+              // 图片加载完成后的操作
+              console.log("Image loaded: " + this.src);
+            }
+        }
+
+        function prevPhoto() {
+            currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+            displayPhoto(currentIndex);
+        }
+
+        function delay(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // 将16进制颜色转换为RGB格式
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            // console.log(result);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : null;
+        }
+
+        // 将RGB颜色转换为16进制格式
+        function rgbToHex(rgb) {
+            rgb = rgb.map(function(value) {
+                return value.toString(16).padStart(2, '0');
+            });
+            return '#' + rgb.join('');
+        }
+
+        async function changeBGColor(startColor, endColor) {
+          // console.log(startColor, endColor);
+          const steps = 30;
+          var rgb1 = hexToRgb(startColor);
+          var rgb2 = hexToRgb(endColor);
+          // console.log(rgb1, rgb2);
+
+          var stepUnit = [];
+          for(var i = 0; i < 3; i++) {
+            stepUnit[i] = (rgb2[i] - rgb1[i]) / steps;
+          }
+
+          for(var i = 0; i < steps; i++) {
+              var rgb = [];
+              for(var j = 0; j < 3; j++) {
+                  rgb[j] = Math.round(rgb1[j] + stepUnit[j] * i);
+              }
+              // console.log(rgb, rgbToHex(rgb));
+              document.body.style.background = rgbToHex(rgb);
+              await delay(20);
+          }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>送给敦老师的！</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='leaflet.css') }}">
+    <style>
+        /* Your CSS styles here */
+        /* Style for the play button */
+        #play-button {
+<!--            position: absolute;-->
+<!--            top: 10px;-->
+<!--            left: 10px;-->
+<!--            z-index: 1;-->
+            background-color: white;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        /* Style for the map container */
+        #map {
+            width: 300px;
+            height: 200px;
+        }
+
+        /* Style for the audio player */
+        #audio {
+        width: 100%;
+        margin-bottom: 20px;
+        /* Add more styling as needed */
+        }
+
+        /* Style for the sidebar */
+        #sidebar {
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+            width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Style for the play buttons */
+        .play-button {
+            display: block;
+            margin-bottom: 10px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        /* Style for the photo */
+        #photo-container {
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div>
+        <button class="play-button" id="photo-button">Start Photo</button>
+<!--        <button class="play-button" id="music-button">Start Music</button>-->
+        </div>
+        <div id="map" style="width: 100%; height: 200px;"></div>
+    </div>
+
+    <div id="content" style="width:100%"> <!-- Add margin to content to avoid overlap with sidebar -->
+        <div id="photo-container">
+            <!-- Your photos go here -->
+        </div>
+    </div>
+
+    <audio id="music" autoplay controls>
+    <source src="/archive/JGA2023/music" type="audio/wav">
+    Your browser does not support the audio element.
+    </audio>
+
+    <script src="{{ url_for('static', filename='leaflet.js') }}"></script>
+    <script>
+        // Your JavaScript code here
+        // Initialize Leaflet map
+        var map = L.map('map').setView([0, 0], 2); // Initial location and zoom level
+        L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); // Use OpenStreetMap as the base map
+
+        // Add a marker function
+        function addMarker(lat, lon) {
+            L.marker([lat, lon]).addTo(map);
+        }
+
+        // Dummy photo data with location information
+        var photos = [
+            { src: '/archive/JGA2023/2023-07-20 054537.JPG', lat: 40.7128, lon: -74.0060 },
+            { src: '/archive/JGA2023/2023-07-20 191740.JPG', lat: 34.0522, lon: -118.2437 },
+            { src: '/archive/JGA2023/2023-07-21 080341.JPG', lat: 34.0522, lon: -118.2437 }
+            // Add more photos here
+        ];
+
+        var currentIndex = 0;
+        var isPhotoPlaying = false;
+        var isMusicPlaying = false;
+
+        function showPhoto(index) {
+            // Display photo at the given index
+            if (index >= 0 && index < photos.length) {
+                var photo = photos[index];
+                document.getElementById('photo-container').innerHTML = `<img style="width:100%" src="${photo.src}" alt="Photo">`;
+                map.setView([photo.lat, photo.lon], 12); // Center map at the photo's location
+                addMarker(photo.lat, photo.lon);
+            }
+        }
+
+        function playPhotos() {
+            if (isPhotoPlaying) {
+                clearInterval(photoInterval);
+                document.getElementById('photo-button').textContent = 'Start Photo';
+                currentIndex = 0; // Reset the index to start over
+            } else {
+                photoInterval = setInterval(function () {
+                    showPhoto(currentIndex);
+                    currentIndex++;
+                    if (currentIndex >= photos.length) {
+                        clearInterval(photoInterval);
+                        currentIndex = 0; // Reset the index to start over
+                        document.getElementById('photo-button').textContent = 'Start Photo';
+                    }
+                }, 8000); // Change photo every 8 seconds
+                document.getElementById('photo-button').textContent = 'Pause Photo';
+            }
+            isPhotoPlaying = !isPhotoPlaying;
+        }
+
+/*
+        function playMusic() {
+            var audio = document.getElementById('music');
+            if (isMusicPlaying) {
+                audio.pause();
+                document.getElementById('music-button').textContent = 'Start Music';
+            } else {
+                audio.play();
+                document.getElementById('music-button').textContent = 'Pause Music';
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+        */
+
+        document.getElementById('photo-button').addEventListener('click', playPhotos);
+        //document.getElementById('music-button').addEventListener('click', playMusic);
+
+
+        // Automatically start the photo slideshow when the page loads
+        playPhotos();
+    </script>
+</body>
+</html>
