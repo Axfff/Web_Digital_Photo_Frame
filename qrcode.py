@@ -1,7 +1,7 @@
 import qrcode
 
 # 要链接的特定页面URL
-page_url = "https://www.axfff.com/archive/JGA2023"
+page_url = "Your web page url"
 
 # 创建QR码对象
 qr = qrcode.QRCode(
